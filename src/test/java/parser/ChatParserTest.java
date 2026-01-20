@@ -10,13 +10,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RawLogParserTest {
+class ChatParserTest {
 
-    private RawLogParser parser;
+    private ChatParser parser;
 
     @BeforeEach
     void setUp() {
-        parser = new RawLogParser();
+        parser = new ChatParser();
     }
 
     @Test
