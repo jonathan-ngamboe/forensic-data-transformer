@@ -4,6 +4,7 @@ package model;
  * Represents a normalized, flattened chat message ready for analysis.
  */
 public record ChatMessage(
+        String id,
         String conversationId,
         String platformId,
         String timestamp,
