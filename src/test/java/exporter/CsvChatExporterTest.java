@@ -17,23 +17,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CsvChatExporterTest {
 
-    private CsvChatExporter writer;
+    private DataExporter<ChatMessage> exporter;
 
     @BeforeEach
     void setUp() {
-        writer = new CsvChatExporter();
+        exporter = new CsvChatExporter();
     }
 
     @Test
     @DisplayName("Should create file with Header and Data")
-    void write_ShouldCreateFile_WithHeaderAndRows(@TempDir Path tempDir) throws IOException {
+    void export_ShouldCreateFile_WithHeaderAndRows(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("output.csv");
         Stream<ChatMessage> messages = Stream.of(
                 new ChatMessage("APD1", "UUID1", "Call1", "2023-01-01", "tom@test.com", "Hello"),
                 new ChatMessage("APD1", "UUID1", "Call1", "2023-01-01", "jerry@test.com", "Hi")
         );
 
-        writer.write(messages, outputFile);
+        exporter.export(messages, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
         assertEquals(3, lines.size(), "Should have 1 header + 2 data rows");
@@ -43,14 +43,14 @@ class CsvChatExporterTest {
 
     @Test
     @DisplayName("Should handle special characters (CSV Escaping)")
-    void write_ShouldEscapeCommasAndQuotes(@TempDir Path tempDir) throws IOException {
+    void export_ShouldEscapeCommasAndQuotes(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("escape_test.csv");
 
         Stream<ChatMessage> messages = Stream.of(
                 new ChatMessage("APD2", "ID2", "P2", "Date", "Bond, James", "He said \"Stop\"")
         );
 
-        writer.write(messages, outputFile);
+        exporter.export(messages, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
         String expectedRow = "APD2,ID2,P2,Date,\"Bond, James\",\"He said \"\"Stop\"\"\"";
@@ -60,25 +60,25 @@ class CsvChatExporterTest {
 
     @Test
     @DisplayName("Should handle null fields gracefully")
-    void write_ShouldHandleNullFields(@TempDir Path tempDir) throws IOException {
+    void export_ShouldHandleNullFields(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("null_test.csv");
         Stream<ChatMessage> messages = Stream.of(
                 new ChatMessage("APD3", null, "P3", null, "me@test.com", null)
         );
 
-        writer.write(messages, outputFile);
+        exporter.export(messages, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
         assertEquals("APD3,,P3,,me@test.com,", lines.get(1));
     }
 
     @Test
-    @DisplayName("Should write only header if stream is empty")
-    void write_ShouldWriteOnlyHeader_WhenStreamIsEmpty(@TempDir Path tempDir) throws IOException {
+    @DisplayName("Should export only header if stream is empty")
+    void export_ShouldExportOnlyHeader_WhenStreamIsEmpty(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("empty.csv");
         Stream<ChatMessage> emptyStream = Stream.empty();
 
-        writer.write(emptyStream, outputFile);
+        exporter.export(emptyStream, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
         assertEquals(1, lines.size());
