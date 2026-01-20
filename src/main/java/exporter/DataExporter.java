@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 public interface DataExporter<T> {
 
     /**
-     * Writes a stream of ChatMessage objects to the specified destination file.
+     * Exports a stream of objects to the specified destination file.
      * <p>
      * This method consumes the input stream.
      *
@@ -15,5 +15,5 @@ public interface DataExporter<T> {
      * @param outputPath The absolute path where the report file will be created or overwritten.
      * @throws IOException If an I/O error occurs while opening or writing to the file.
      */
-    void write(Stream<T> input, Path outputPath) throws IOException;
+    void export(Stream<T> input, Path outputPath) throws IOException;
 }
