@@ -2,7 +2,7 @@ package parser;
 
 import model.ChatMessage;
 
-import static util.LogPatterns.*;
+import static util.ChatPatterns.*;
 
 import java.util.regex.Matcher;
 import java.util.stream.Stream;

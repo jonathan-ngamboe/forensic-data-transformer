@@ -6,9 +6,9 @@ import java.util.regex.Pattern;
  * Central repository for Regex patterns used in log parsing
  * to directly capture values of interest.
  */
-public final class LogPatterns {
+public final class ChatPatterns {
 
-    private LogPatterns() {}
+    private ChatPatterns() {}
 
     /**
      * Matches the block start identifier (e.g., "APD93823").
