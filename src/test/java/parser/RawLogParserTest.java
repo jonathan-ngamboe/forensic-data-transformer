@@ -20,7 +20,7 @@ class RawLogParserTest {
     }
 
     @Test
-    @DisplayName("Should extract standard messages correctly")
+    @DisplayName("Should extract standard messages correctly mapping all 6 fields")
     void parse_ShouldReturnMessages_WhenBlockIsComplete() {
         Stream<String> input = Stream.of(
                 "APD93823,",
@@ -35,15 +35,16 @@ class RawLogParserTest {
         assertEquals(1, results.size());
         ChatMessage msg = results.getFirst();
 
-        assertEquals("APD93823", msg.conversationId());
-        assertEquals("875515930-8419-5982-c553", msg.platformId());
+        assertEquals("APD93823", msg.id(), "The ID field should contain the Block Identifier (APD...)");
+        assertEquals("8755-UUID", msg.conversationId(), "The ConversationID field should contain the UUID");
+        assertEquals("Call-123", msg.platformId(), "The PlatformID field should contain the Call ID");
         assertEquals("10/10/19 4:10:12 PM", msg.timestamp());
         assertEquals("anonym@anonym.fr", msg.sender());
         assertEquals("Good luck with the exercise!", msg.message());
     }
 
     @Test
-    @DisplayName("Should handle interrupted blocks")
+    @DisplayName("Should handle interrupted blocks (Context Reset)")
     void parse_ShouldResetContext_WhenNewBlockStartsAbruptly() {
         Stream<String> input = Stream.of(
                 "APD001,",
@@ -57,9 +58,12 @@ class RawLogParserTest {
 
         List<ChatMessage> results = parser.parse(input).toList();
 
-        assertEquals(1, results.size(), "Should only output messages from the complete block");
-        assertEquals("APD002", results.getFirst().conversationId(), "Context should adhere to the latest block ID");
-        assertEquals("UUID-2", results.getFirst().platformId());
+        assertEquals(1, results.size(), "Should only capture the message from the valid/active block");
+
+        ChatMessage msg = results.getFirst();
+        assertEquals("APD002", msg.id(), "Should adhere to the latest Block ID");
+        assertEquals("UUID-2", msg.conversationId(), "Should adhere to the latest Conversation UUID");
+        assertEquals("Call-002", msg.platformId());
     }
 
     @Test
@@ -77,7 +81,8 @@ class RawLogParserTest {
 
         assertEquals(1, results.size());
         String messageContent = results.getFirst().message();
-        assertTrue(messageContent.contains("Hello, world"), "Message should not be split at the internal comma");
+
+        assertTrue(messageContent.contains("Hello, world"), "Message content should preserve internal commas");
     }
 
     @Test
@@ -96,6 +101,6 @@ class RawLogParserTest {
         List<ChatMessage> results = parser.parse(input).toList();
 
         assertEquals(1, results.size());
-        assertEquals("APD123", results.getFirst().conversationId());
+        assertEquals("APD123", results.getFirst().id(), "Should find the correct Block ID despite noise");
     }
 }
