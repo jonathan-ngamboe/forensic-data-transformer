@@ -1,7 +1,6 @@
 package exporter;
 
 import model.ChatMessage;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,8 +35,12 @@ class CsvChatExporterTest {
         exporter.export(messages, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
+
         assertEquals(3, lines.size(), "Should have 1 header + 2 data rows");
-        assertEquals("BlockID,ConversationID,PlatformID,Date,Sender,Message", lines.get(0), "Header mismatch");
+
+        String expectedHeader = "id,conversationId,platformId,timestamp,sender,message";
+        assertEquals(expectedHeader, lines.getFirst(), "Header name mismatch");
+
         assertEquals("APD1,UUID1,Call1,2023-01-01,tom@test.com,Hello", lines.get(1));
     }
 
@@ -47,13 +50,13 @@ class CsvChatExporterTest {
         Path outputFile = tempDir.resolve("escape_test.csv");
 
         Stream<ChatMessage> messages = Stream.of(
-                new ChatMessage("APD2", "ID2", "P2", "Date", "Bond, James", "He said \"Stop\"")
+                new ChatMessage("APD2", "ID2", "P2", "2023-01-02", "Bond, James", "He said \"Stop\"")
         );
 
         exporter.export(messages, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
-        String expectedRow = "APD2,ID2,P2,Date,\"Bond, James\",\"He said \"\"Stop\"\"\"";
+        String expectedRow = "APD2,ID2,P2,2023-01-02,\"Bond, James\",\"He said \"\"Stop\"\"\"";
 
         assertEquals(expectedRow, lines.get(1), "CSV escaping logic is incorrect");
     }
@@ -81,7 +84,7 @@ class CsvChatExporterTest {
         exporter.export(emptyStream, outputFile);
 
         List<String> lines = Files.readAllLines(outputFile);
-        assertEquals(1, lines.size());
-        assertTrue(lines.getFirst().startsWith("BlockID"), "Header should still be present");
+        assertEquals(1, lines.size(), "Should verify exactly 1 line (header)");
+        assertTrue(lines.getFirst().startsWith("id"), "Header should start with the first field name");
     }
 }
