@@ -8,6 +8,10 @@ import tools.jackson.dataformat.csv.CsvSchema;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+/**
+ * Exporter implementation that writes ChatMessage objects to CSV format.
+ * Uses the ChatMessage record structure to generate headers automatically.
+ */
 public class CsvChatExporter implements DataExporter<ChatMessage> {
     private final CsvMapper csvMapper;
     private final CsvSchema schema;
