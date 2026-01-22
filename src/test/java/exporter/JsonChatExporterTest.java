@@ -1,13 +1,14 @@
 package exporter;
 
+
 import model.ChatMessage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.*;
+
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -16,10 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class JsonChatExporterTest {
 
     private DataExporter<ChatMessage> exporter;
+    private ObjectMapper mapper;
 
     @BeforeEach
     void setUp() {
         exporter = new JsonChatExporter();
+        mapper = new ObjectMapper();
     }
 
     @Test
@@ -33,22 +36,20 @@ class JsonChatExporterTest {
 
         exporter.export(messages, outputFile);
 
-        String content = Files.readString(outputFile);
+        JsonNode rootNode = mapper.readTree(outputFile.toFile());
 
-        assertTrue(content.trim().startsWith("["), "JSON must start with '['");
-        assertTrue(content.trim().endsWith("]"), "JSON must end with ']'");
+        assertTrue(rootNode.isArray(), "Root should be a JSON array");
+        assertEquals(2, rootNode.size(), "Should contain 2 elements");
 
-        assertTrue(content.contains("\"id\": \"APD1\""));
-        assertTrue(content.contains("\"sender\": \"tom@test.com\""));
-
-        assertTrue(content.contains("},"), "Objects inside array should be separated by commas");
+        JsonNode firstElement = rootNode.get(0);
+        assertEquals("APD1", firstElement.get("id").asString());
+        assertEquals("tom@test.com", firstElement.get("sender").asString());
     }
 
     @Test
-    @DisplayName("Should handle JSON escaping logic (quotes and backslashes)")
+    @DisplayName("Should handle JSON escaping logic")
     void export_ShouldEscapeSpecialCharacters(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("escape.json");
-
         String trickyMessage = "She said \"Hello\" \\ Bye";
 
         Stream<ChatMessage> messages = Stream.of(
@@ -57,12 +58,10 @@ class JsonChatExporterTest {
 
         exporter.export(messages, outputFile);
 
-        String content = Files.readString(outputFile);
+        JsonNode rootNode = mapper.readTree(outputFile.toFile());
+        String savedMessage = rootNode.get(0).get("message").asString();
 
-        String expectedSnippet = "\"message\": \"She said \\\"Hello\\\" \\\\ Bye\"";
-
-        assertTrue(content.contains(expectedSnippet),
-                "Special characters like quotes and backslashes must be escaped correctly");
+        assertEquals(trickyMessage, savedMessage);
     }
 
     @Test
@@ -73,7 +72,9 @@ class JsonChatExporterTest {
 
         exporter.export(emptyStream, outputFile);
 
-        String content = Files.readString(outputFile).trim();
-        assertEquals("[]", content, "Empty stream should produce an empty JSON array");
+        JsonNode root = mapper.readTree(outputFile.toFile());
+
+        assertTrue(root.isArray());
+        assertTrue(root.isEmpty(), "Array should be empty");
     }
 }
